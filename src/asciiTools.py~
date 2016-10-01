@@ -1,0 +1,23 @@
+import numpy
+
+chars = ["$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "]
+displayableCharLen = len(chars)
+brightnessPerStep = 255 / displayableCharLen
+
+# pixels is a 2d array of 3-tuples that are R, G, B
+def getBrightnessMap(pixels, sourceWidth, sourceHeight, outputWidth, outputHeight):
+    outputArray = numpy.zeros(shape=(outputHeight, outputWidth))
+    pixelsPerOutputSquare = (sourceHeight / outputHeight) * (sourceWidth / outputWidth)
+    for r in range(sourceHeight):
+        row = pixels[r]
+        for c in range(sourceWidth):
+            outputArray[int(r / outputHeight)][int(c / outputWidth)] += sum(pixels[r][c])
+    for r in range(outputHeight):
+        for c in range(outputWidth):
+            outputArray[r][c] = int(outputArray[r][c] / pixelsPerOutputSquare)
+    
+
+def getCharMap(data, width, height):
+    brightness = getBrightnessMap(data, len(data), len(data[0]), width, height)
+    result = [[chars[brightness[r][c] / brightnessPerStep] for c in range(width)] for r in range(height)]
+    return result
