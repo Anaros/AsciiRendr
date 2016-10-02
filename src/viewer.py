@@ -306,9 +306,9 @@ class GLRenderer():
         # glutSwapBuffers()
         if rotating:
             self.do_motion()
-            glRotatef(self.angle,0.,1.,0.)
             data = None
         self.checkInput()
+        glRotatef(self.angle,0.,1.,0.)        
 #        self.rotateCamera(0, 0)
         if data is None:
             data = glReadPixels(0, 0, width * 2, height, GL_RGB, GL_UNSIGNED_BYTE, outputType=None)
@@ -330,23 +330,21 @@ class GLRenderer():
             rotating = not rotating
         elif c == ord('t'):
             self.set_default_camera()
-        elif c == ord('f'):
+        elif c == ord('g'):
            self.fit_scene()
         elif c == ord('w'):
-            self.rotateCamera(.5, 0)
+            glTranslatef(0, 1, 0)
         elif c == ord('s'):
-            self.rotateCamera(-.5, 0)
+            glTranslatef(0, -1, 0)
         elif c == ord('a'):
-            self.rotateCamera(0, .5)
+            glTranslatef(-1, 0, 0)
         elif c == ord('d'):
-            self.rotateCamera(0, -.5)
+            glTranslatef(1, 0, 0)
         elif c == curses.KEY_DOWN:
-            radius += 1
-            self.rotateCamera(0, 0)
+            glScalef(.9, .9, .9)
         elif c == curses.KEY_UP:
-            self.rotateCamera(0, 0)
-            radius -= 1
-            
+            glScalef(1.1, 1.1, 1.1)            
+                        
     
     def displayData(self, data):
         gl_time = glutGet(GLUT_ELAPSED_TIME)
