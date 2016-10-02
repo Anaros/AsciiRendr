@@ -312,7 +312,7 @@ class GLRenderer():
 #        self.rotateCamera(0, 0)
         if data is None:
             data = glReadPixels(0, 0, width * 2, height, GL_RGB, GL_UNSIGNED_BYTE, outputType=None)
-        self.displayData(data)
+            self.displayData(data)
         glutPostRedisplay()
         return
 
