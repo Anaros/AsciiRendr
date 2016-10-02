@@ -43,8 +43,8 @@ from pyassimp.helper import *
 
 
 name = 'pyassimp OpenGL viewer'
-height = 600
-width = 600
+height = 250
+width = 250
 waitTime = 0  # Time to wait between frames
 rotating = False
 cameraVals = [[0, 0, 0],
@@ -53,6 +53,7 @@ cameraVals = [[0, 0, 0],
 phi = 0
 theta = 0
 radius = 0
+data = None
 
 class GLRenderer():
     def __init__(self):
@@ -210,7 +211,7 @@ class GLRenderer():
         cameraVals[1][0] = self.scene_center[0]
         cameraVals[1][1] = self.scene_center[1]
         cameraVals[1][2] = self.scene_center[2]
-        # self.calcRadiusToObject()
+#        self.calcRadiusToObject()
         return x_max, y_max, z_max
 
     def apply_material(self, mat):
@@ -298,26 +299,30 @@ class GLRenderer():
     def display(self):
         """ GLUT callback to redraw OpenGL surface
         """
+        global data
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         self.recursive_render(self.scene.rootnode)
-        data = glReadPixels(0, 0, width * 2, height, GL_RGB, GL_UNSIGNED_BYTE, outputType=None)
-        self.displayData(data)
         # glFlush()
         # glutSwapBuffers()
         if rotating:
             self.do_motion()
             glRotatef(self.angle,0.,1.,0.)
+            data = None
         self.checkInput()
-        self.rotateCamera(0, 0)
+#        self.rotateCamera(0, 0)
+        if data is None:
+            data = glReadPixels(0, 0, width * 2, height, GL_RGB, GL_UNSIGNED_BYTE, outputType=None)
+        self.displayData(data)
         glutPostRedisplay()
         return
 
     def checkInput(self):
-        global radius
+        global radius, data
         c = curseScreen.getch()
         if c == -1:
             return
-        elif c == ord('k'):
+        data = None
+        if c == ord('k'):
             killApp()
             sys.exit(0)
         elif c == ord('r'):
@@ -325,6 +330,8 @@ class GLRenderer():
             rotating = not rotating
         elif c == ord('t'):
             self.set_default_camera()
+        elif c == ord('f'):
+           self.fit_scene()
         elif c == ord('w'):
             self.rotateCamera(.5, 0)
         elif c == ord('s'):
@@ -335,7 +342,9 @@ class GLRenderer():
             self.rotateCamera(0, -.5)
         elif c == curses.KEY_DOWN:
             radius += 1
+            self.rotateCamera(0, 0)
         elif c == curses.KEY_UP:
+            self.rotateCamera(0, 0)
             radius -= 1
             
     
