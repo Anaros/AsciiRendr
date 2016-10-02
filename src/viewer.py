@@ -46,10 +46,13 @@ name = 'pyassimp OpenGL viewer'
 height = 600
 width = 600
 waitTime = 0  # Time to wait between frames
-
+rotating = False
 cameraVals = [[0, 0, 0],
               [0, 0, 0],
               [0, 1, 0]]
+phi = 0
+theta = 0
+radius = 0
 
 class GLRenderer():
     def __init__(self):
@@ -137,7 +140,9 @@ class GLRenderer():
         return cam
 
     def set_default_camera(self):
-
+        global phi, theta
+        theta = 0
+        phi = 0
         if not self.using_fixed_cam:
             glLoadIdentity()
             gluLookAt(0.,0.,3.,
@@ -146,39 +151,39 @@ class GLRenderer():
 
 
 
-    def set_camera(self, camera):
+    # def set_camera(self, camera):
 
-        if not camera:
-            return
+    #     if not camera:
+    #         return
 
-        self.using_fixed_cam = True
+    #     self.using_fixed_cam = True
 
-        znear = camera.clipplanenear
-        zfar = camera.clipplanefar
-        aspect = camera.aspect
-        fov = camera.horizontalfov
+    #     znear = camera.clipplanenear
+    #     zfar = camera.clipplanefar
+    #     aspect = camera.aspect
+    #     fov = camera.horizontalfov
 
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
+    #     glMatrixMode(GL_PROJECTION)
+    #     glLoadIdentity()
 
-        # Compute gl frustrum
-        tangent = math.tan(fov/2.)
-        h = znear * tangent
-        w = h * aspect
+    #     # Compute gl frustrum
+    #     tangent = math.tan(fov/2.)
+    #     h = znear * tangent
+    #     w = h * aspect
 
-        # params: left, right, bottom, top, near, far
-        glFrustum(-w, w, -h, h, znear, zfar)
-        # equivalent to:
-        #gluPerspective(fov * 180/math.pi, aspect, znear, zfar)
+    #     # params: left, right, bottom, top, near, far
+    #     glFrustum(-w, w, -h, h, znear, zfar)
+    #     # equivalent to:
+    #     #gluPerspective(fov * 180/math.pi, aspect, znear, zfar)
 
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
+    #     glMatrixMode(GL_MODELVIEW)
+    #     glLoadIdentity()
 
-        cam = transform(camera.position, camera.transformation)
-        at = transform(camera.lookat, camera.transformation)
-        gluLookAt(cam[0], cam[2], -cam[1],
-                   at[0],  at[2],  -at[1],
-                       0,      1,       0)
+    #     cam = transform(camera.position, camera.transformation)
+    #     at = transform(camera.lookat, camera.transformation)
+    #     gluLookAt(cam[0], cam[2], -cam[1],
+    #                at[0],  at[2],  -at[1],
+    #                    0,      1,       0)
 
     def fit_scene(self, restore = False):
         """ Compute a scale factor and a translation to fit and center 
@@ -205,6 +210,7 @@ class GLRenderer():
         cameraVals[1][0] = self.scene_center[0]
         cameraVals[1][1] = self.scene_center[1]
         cameraVals[1][2] = self.scene_center[2]
+        # self.calcRadiusToObject()
         return x_max, y_max, z_max
 
     def apply_material(self, mat):
@@ -293,33 +299,45 @@ class GLRenderer():
         """ GLUT callback to redraw OpenGL surface
         """
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-
-        glRotatef(self.angle,0.,1.,0.)
         self.recursive_render(self.scene.rootnode)
         data = glReadPixels(0, 0, width * 2, height, GL_RGB, GL_UNSIGNED_BYTE, outputType=None)
         self.displayData(data)
-        glFlush()
+        # glFlush()
         # glutSwapBuffers()
-        self.do_motion()
+        if rotating:
+            self.do_motion()
+            glRotatef(self.angle,0.,1.,0.)
         self.checkInput()
+        self.rotateCamera(0, 0)
         glutPostRedisplay()
         return
 
     def checkInput(self):
+        global radius
         c = curseScreen.getch()
         if c == -1:
             return
-        if c == ord('k'):
+        elif c == ord('k'):
             killApp()
             sys.exit(0)
-        if c == ord('w'):
-            self.moveCamera(ex=.5)
-        if c == ord('s'):
-            self.moveCamera(ex=-.5)
-        elif c == ord('c'):
-            self.fit_scene(restore = True)
-            self.set_camera(self.cycle_cameras())
-
+        elif c == ord('r'):
+            global rotating
+            rotating = not rotating
+        elif c == ord('t'):
+            self.set_default_camera()
+        elif c == ord('w'):
+            self.rotateCamera(.5, 0)
+        elif c == ord('s'):
+            self.rotateCamera(-.5, 0)
+        elif c == ord('a'):
+            self.rotateCamera(0, .5)
+        elif c == ord('d'):
+            self.rotateCamera(0, -.5)
+        elif c == curses.KEY_DOWN:
+            radius += 1
+        elif c == curses.KEY_UP:
+            radius -= 1
+            
     
     def displayData(self, data):
         gl_time = glutGet(GLUT_ELAPSED_TIME)
@@ -332,6 +350,26 @@ class GLRenderer():
         for r in range(curseScreenHeight):
             curseScreen.addstr(r, 0, charMap[-r])
         curseScreen.refresh()
+
+
+
+    def calcRadiusToObject(self):
+        global radius
+#        radius = 5
+        radius = math.sqrt((cameraVals[0][0] - cameraVals[1][0]) ** 2
+                           + (cameraVals[0][1] - cameraVals[1][1]) ** 2
+                           + (cameraVals[0][2] - cameraVals[1][2]) ** 2)
+
+    def rotateCamera(self, phiDelta, thetaDelta):
+        global radius
+        phi = phiDelta
+        theta = thetaDelta
+
+        eyeX = cameraVals[1][0] + radius * math.cos(phi) * math.sin(theta)
+        eyeY = cameraVals[1][1] + radius * math.sin(phi) * math.sin(theta)
+        eyeZ = cameraVals[1][2] + radius * math.cos(theta)
+        gluLookAt(eyeX, eyeY, eyeZ, cameraVals[1][0], cameraVals[1][1], cameraVals[1][2], 0, 1, 0)
+        self.calcRadiusToObject()
 
 
     def moveCamera(self, ex=0, ey=0, ez=0, cx=0, cy=0, cz=0, upx=0, upy=0, upz=0):
@@ -354,7 +392,7 @@ class GLRenderer():
     def onkeypress(self, key, x, y):
         if key == 'c':
             self.fit_scene(restore = True)
-            self.set_camera(self.cycle_cameras())
+#            self.set_camera(self.cycle_cameras())
 
     def render(self, filename=None, fullscreen = False, autofit = True, postprocess = None):
         """

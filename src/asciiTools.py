@@ -11,15 +11,18 @@ def getBrightnessMap2(imageArr, width, height):
     yGroups = math.floor(len(imageArr) / height)
     width = math.floor(width)
     height = math.floor(height)
-    subgroups = numpy.zeros(shape=(yGroups, xGroups))
+    subgroups = []
     for y in range(yGroups):
+        subgroup = []
+        yHeight = y * height
         for x in range(xGroups):
             tempSum = 0
-            for h in range(0, height):
-                for w in range(0, width):
-                    tempSum += imageArr[y * height + h][x * width + w][0]
-
-            subgroups[y][x] = tempSum / (width * height)
+            xWidth = x * width
+            for h in range(yHeight, yHeight + height):
+                for w in range(xWidth, xWidth + width):
+                    tempSum += imageArr[h][w][0]
+            subgroup.append(convertBrightnessValue(tempSum / (width * height)))
+        subgroups.append("".join(subgroup))
 
     return subgroups
 
@@ -30,5 +33,5 @@ def getCharMap(data, width, height):
     widthPerSquare = len(data[0]) / width
     heightPerSquare = len(data) / height
     brightness = getBrightnessMap2(data, widthPerSquare, heightPerSquare)
-    result = ["".join(map(convertBrightnessValue, bRow)) for bRow in brightness]
-    return result
+#    result = ["".join(map(convertBrightnessValue, bRow)) for bRow in brightness]
+    return brightness
