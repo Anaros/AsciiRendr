@@ -464,6 +464,7 @@ def displayImage(inputFile):
     width, height = img.size
     data = list(img.getdata())
     pixels = [data[i * width: (i + 1) * width] for i in range(height)]
+    pixels.reverse()
     displayData(pixels)
 
 
