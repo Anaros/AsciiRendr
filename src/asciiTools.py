@@ -1,4 +1,3 @@
-import numpy
 import math
 
 global displayableChars, displayableCharLen, brightnessPerStep
@@ -31,9 +30,9 @@ def getBrightnessMap2(imageArr, width, height):
 def convertBrightnessValue(bValue):
     return displayableChars[int(bValue / brightnessPerStep)]
 
+
 def getCharMap(data, width, height):
     widthPerSquare = len(data[0]) / width
     heightPerSquare = len(data) / height
     brightness = getBrightnessMap2(data, widthPerSquare, heightPerSquare)
-#    result = ["".join(map(convertBrightnessValue, bRow)) for bRow in brightness]
     return brightness

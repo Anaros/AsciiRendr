@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """ This program demonstrates the use of pyassimp to load and
 render objects with OpenGL.
@@ -29,9 +29,6 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from OpenGL.GL import *
 
-# import logging;logger = logging.getLogger("pyassimp_opengl")
-# logging.basicConfig(level=logging.INFO)
-
 import argparse
 import asciiTools
 import math
@@ -53,6 +50,7 @@ phi = 0
 theta = 0
 radius = 0
 data = None
+
 
 class GLRenderer():
     def __init__(self):
@@ -106,22 +104,13 @@ class GLRenderer():
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0)
 
     def load_model(self, path, postprocess = None):
-#        logger.info("Loading model:" + path + "...")
-
         if postprocess:
             self.scene = pyassimp.load(path, postprocess)
         else:
             self.scene = pyassimp.load(path)
-#        logger.info("Done.")
 
         scene = self.scene
-        #log some statistics
-        # logger.info("  meshes: %d" % len(scene.meshes))
-        # logger.info("  total faces: %d" % sum([len(mesh.faces) for mesh in scene.meshes]))
-        # logger.info("  materials: %d" % len(scene.materials))
         self.bb_min, self.bb_max = get_bounding_box(self.scene)
-        # logger.info("  bounding box:" + str(self.bb_min) + " - " + str(self.bb_max))
-
         self.scene_center = [(a + b) / 2. for a, b in zip(self.bb_min, self.bb_max)]
 
         for index, mesh in enumerate(scene.meshes):
@@ -136,7 +125,6 @@ class GLRenderer():
             return None
         self.current_cam_index = (self.current_cam_index + 1) % len(self.scene.cameras)
         cam = self.scene.cameras[self.current_cam_index]
-        # logger.info("Switched to camera " + str(cam))
         return cam
 
     def set_default_camera(self):
@@ -149,44 +137,8 @@ class GLRenderer():
                       0.,0.,-5.,
                       0.,1.,0.)
 
-
-
-    # def set_camera(self, camera):
-
-    #     if not camera:
-    #         return
-
-    #     self.using_fixed_cam = True
-
-    #     znear = camera.clipplanenear
-    #     zfar = camera.clipplanefar
-    #     aspect = camera.aspect
-    #     fov = camera.horizontalfov
-
-    #     glMatrixMode(GL_PROJECTION)
-    #     glLoadIdentity()
-
-    #     # Compute gl frustrum
-    #     tangent = math.tan(fov/2.)
-    #     h = znear * tangent
-    #     w = h * aspect
-
-    #     # params: left, right, bottom, top, near, far
-    #     glFrustum(-w, w, -h, h, znear, zfar)
-    #     # equivalent to:
-    #     #gluPerspective(fov * 180/math.pi, aspect, znear, zfar)
-
-    #     glMatrixMode(GL_MODELVIEW)
-    #     glLoadIdentity()
-
-    #     cam = transform(camera.position, camera.transformation)
-    #     at = transform(camera.lookat, camera.transformation)
-    #     gluLookAt(cam[0], cam[2], -cam[1],
-    #                at[0],  at[2],  -at[1],
-    #                    0,      1,       0)
-
     def fit_scene(self, restore = False):
-        """ Compute a scale factor and a translation to fit and center 
+        """ Compute a scale factor and a translation to fit and center
         the whole geometry on the screen.
         """
 
@@ -199,7 +151,6 @@ class GLRenderer():
         if not restore:
             tmp = 1. / tmp
 
-        # logger.info("Scaling the scene by %.03f" % tmp)
         glScalef(tmp, tmp, tmp)
 
         # center the model
@@ -237,26 +188,20 @@ class GLRenderer():
             glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE if wireframe else GL_FILL)
             glDisable(GL_CULL_FACE) if twosided else glEnable(GL_CULL_FACE)
-    
+
             glEndList()
-    
+
         glCallList(mat.gl_mat)
 
-    
-   
     def do_motion(self):
-
         gl_time = glutGet(GLUT_ELAPSED_TIME)
-
         self.angle = (gl_time - self.prev_time) * 0.1
-
         self.prev_time = gl_time
         
         # Compute FPS
         self.frames += 1
         if gl_time - self.prev_fps_time >= 1000:
             current_fps = self.frames * 1000 / (gl_time - self.prev_fps_time)
-            # logger.info('%.0f fps' % current_fps)
             self.frames = 0
             self.prev_fps_time = gl_time
 
@@ -293,7 +238,6 @@ class GLRenderer():
             self.recursive_render(child)
 
         glPopMatrix()
-
 
     def display(self):
         """ GLUT callback to redraw OpenGL surface
@@ -383,13 +327,10 @@ class GLRenderer():
                   cameraVals[1][0], cameraVals[1][1], cameraVals[1][2],
                   cameraVals[2][0], cameraVals[2][1], cameraVals[2][2])
         
-    ####################################################################
-    ##               GLUT keyboard and mouse callbacks                ##
-    ####################################################################
+
+    # This doesn't do anything because
     def onkeypress(self, key, x, y):
-        if key == 'c':
-            self.fit_scene(restore = True)
-#            self.set_camera(self.cycle_cameras())
+        return
 
     def render(self, filename=None, fullscreen = False, autofit = True, postprocess = None):
         """
@@ -435,7 +376,7 @@ class GLRenderer():
 
         glPushMatrix()
 
-        glutKeyboardFunc(self.onkeypress)
+#        glutKeyboardFunc(self.onkeypress)
         glutIgnoreKeyRepeat(1)
 
         glutMainLoop()
@@ -447,6 +388,7 @@ def killApp():
     curses.echo()
     curses.endwin()
 
+
 def initCurseScreen():
     global curseScreen
     curseScreen = curses.initscr()
@@ -457,6 +399,7 @@ def initCurseScreen():
     curseScreenHeight, curseScreenWidth = curseScreen.getmaxyx()
     curseScreenHeight -= 1
     curseScreenWidth -= 1
+
 
 def displayImage(inputFile):
     img = Image.open(args.inputFile).convert("LA")
@@ -500,7 +443,7 @@ if __name__ == '__main__':
     global height, width
     height = args.x
     width = args.y
-    
+
     initCurseScreen()
     if args.model:
         curseScreen.nodelay(1)
