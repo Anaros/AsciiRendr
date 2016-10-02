@@ -32,6 +32,7 @@ from OpenGL.GL import *
 # import logging;logger = logging.getLogger("pyassimp_opengl")
 # logging.basicConfig(level=logging.INFO)
 
+import argparse
 import asciiTools
 import math
 import numpy
@@ -40,11 +41,9 @@ import curses
 import pyassimp
 from pyassimp.postprocess import *
 from pyassimp.helper import *
-
+from PIL import Image
 
 name = 'pyassimp OpenGL viewer'
-height = 250
-width = 250
 waitTime = 0  # Time to wait between frames
 rotating = False
 cameraVals = [[0, 0, 0],
@@ -308,11 +307,12 @@ class GLRenderer():
             self.do_motion()
             data = None
         self.checkInput()
-        glRotatef(self.angle,0.,1.,0.)        
+        glRotatef(self.angle,0.,1.,0.)
+        self.angle = 0
 #        self.rotateCamera(0, 0)
         if data is None:
             data = glReadPixels(0, 0, width * 2, height, GL_RGB, GL_UNSIGNED_BYTE, outputType=None)
-            self.displayData(data)
+            displayData(data)
         glutPostRedisplay()
         return
 
@@ -343,21 +343,11 @@ class GLRenderer():
         elif c == curses.KEY_DOWN:
             glScalef(.9, .9, .9)
         elif c == curses.KEY_UP:
-            glScalef(1.1, 1.1, 1.1)            
-                        
-    
-    def displayData(self, data):
-        gl_time = glutGet(GLUT_ELAPSED_TIME)
-        if gl_time - self.prev_refreshed_time > waitTime:
-            self.prev_refreshed_time = gl_time
-        else:
-            return
-        charMap = asciiTools.getCharMap(data, curseScreenWidth, curseScreenHeight)
-        curseScreen.clear()
-        for r in range(curseScreenHeight):
-            curseScreen.addstr(r, 0, charMap[-r])
-        curseScreen.refresh()
-
+            glScalef(1.1, 1.1, 1.1)
+        elif c == curses.KEY_LEFT:
+            self.angle -= 10
+        elif c == curses.KEY_RIGHT:
+            self.angle += 10
 
 
     def calcRadiusToObject(self):
@@ -463,18 +453,59 @@ def initCurseScreen():
     curses.noecho()
     curses.cbreak()
     curseScreen.keypad(True)
-    curseScreen.nodelay(1)
     global curseScreenHeight, curseScreenWidth
     curseScreenHeight, curseScreenWidth = curseScreen.getmaxyx()
     curseScreenHeight -= 1
     curseScreenWidth -= 1
 
+def displayImage(inputFile):
+    img = Image.open(args.inputFile).convert("LA")
+    global width, height
+    width, height = img.size
+    data = list(img.getdata())
+    pixels = [data[i * width: (i + 1) * width] for i in range(height)]
+    displayData(pixels)
+
+
+def checkImageInput():
+    c = curseScreen.getch()
+    if c == -1:
+        return
+    if c == ord('k'):
+        killApp()
+        sys.exit(0)
+
+
+def displayData(data):
+        charMap = asciiTools.getCharMap(data, curseScreenWidth, curseScreenHeight)
+        curseScreen.clear()
+        for r in range(curseScreenHeight):
+            curseScreen.addstr(r, 0, charMap[-r])
+        curseScreen.refresh()
+    
+    
 if __name__ == '__main__':
     if not len(sys.argv) > 1:
         print("Usage: " + __file__ + " <model>")
         sys.exit(0)
 
-    initCurseScreen()
-    glrender = GLRenderer()
-    glrender.render(sys.argv[1], fullscreen = False, postprocess = aiProcessPreset_TargetRealtime_MaxQuality)
+    parser = argparse.ArgumentParser(description="Display with ASCII")
+    parser.add_argument("inputFile")
+    parser.add_argument("--model", action="store_true")
+    parser.add_argument("-x", type=int, default=250)
+    parser.add_argument("-y", type=int, default=250)
+    args = parser.parse_args()
 
+    global height, width
+    height = args.x
+    width = args.y
+    
+    initCurseScreen()
+    if args.model:
+        curseScreen.nodelay(1)
+        glrender = GLRenderer()
+        glrender.render(args.inputFile, fullscreen = False, postprocess = aiProcessPreset_TargetRealtime_MaxQuality)
+    else:
+        displayImage(args.inputFile)
+        while True:
+            checkImageInput()

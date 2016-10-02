@@ -6,6 +6,7 @@ displayableChars = " .\'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbk
 displayableCharLen = len(displayableChars)
 brightnessPerStep = 255 / displayableCharLen
 
+
 def getBrightnessMap2(imageArr, width, height):
     xGroups = math.floor(len(imageArr[0]) / width)
     yGroups = math.floor(len(imageArr) / height)
@@ -25,6 +26,7 @@ def getBrightnessMap2(imageArr, width, height):
         subgroups.append("".join(subgroup))
 
     return subgroups
+
 
 def convertBrightnessValue(bValue):
     return displayableChars[int(bValue / brightnessPerStep)]
