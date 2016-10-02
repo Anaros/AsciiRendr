@@ -47,6 +47,10 @@ height = 600
 width = 600
 waitTime = 0  # Time to wait between frames
 
+cameraVals = [[0, 0, 0],
+              [0, 0, 0],
+              [0, 1, 0]]
+
 class GLRenderer():
     def __init__(self):
 
@@ -136,7 +140,6 @@ class GLRenderer():
 
         if not self.using_fixed_cam:
             glLoadIdentity()
-
             gluLookAt(0.,0.,3.,
                       0.,0.,-5.,
                       0.,1.,0.)
@@ -199,7 +202,9 @@ class GLRenderer():
         glTranslatef( direction * self.scene_center[0], 
                       direction * self.scene_center[1], 
                       direction * self.scene_center[2] )
-
+        cameraVals[1][0] = self.scene_center[0]
+        cameraVals[1][1] = self.scene_center[1]
+        cameraVals[1][2] = self.scene_center[2]
         return x_max, y_max, z_max
 
     def apply_material(self, mat):
@@ -307,6 +312,14 @@ class GLRenderer():
         if c == ord('k'):
             killApp()
             sys.exit(0)
+        if c == ord('w'):
+            self.moveCamera(ex=.5)
+        if c == ord('s'):
+            self.moveCamera(ex=-.5)
+        elif c == ord('c'):
+            self.fit_scene(restore = True)
+            self.set_camera(self.cycle_cameras())
+
     
     def displayData(self, data):
         gl_time = glutGet(GLUT_ELAPSED_TIME)
@@ -320,6 +333,21 @@ class GLRenderer():
             curseScreen.addstr(r, 0, charMap[-r])
         curseScreen.refresh()
 
+
+    def moveCamera(self, ex=0, ey=0, ez=0, cx=0, cy=0, cz=0, upx=0, upy=0, upz=0):
+        cameraVals[0][0] += ex
+        cameraVals[0][1] += ey
+        cameraVals[0][2] += ez
+        cameraVals[1][0] += cx        
+        cameraVals[1][1] += cy
+        cameraVals[1][2] += cz
+        cameraVals[2][0] += upx
+        cameraVals[2][1] += upy
+        cameraVals[2][2] += upz
+        gluLookAt(cameraVals[0][0], cameraVals[0][1], cameraVals[0][2],
+                  cameraVals[1][0], cameraVals[1][1], cameraVals[1][2],
+                  cameraVals[2][0], cameraVals[2][1], cameraVals[2][2])
+        
     ####################################################################
     ##               GLUT keyboard and mouse callbacks                ##
     ####################################################################
