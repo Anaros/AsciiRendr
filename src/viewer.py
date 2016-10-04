@@ -7,12 +7,12 @@ render objects with OpenGL.
 'c' cycles between cameras (if any available)
 'q' to quit
 
-This example mixes 'old' OpenGL fixed-function pipeline with 
+This example mixes 'old' OpenGL fixed-function pipeline with
 Vertex Buffer Objects.
 
 Materials are supported but textures are currently ignored.
 
-For a more advanced example (with shaders + keyboard/mouse 
+For a more advanced example (with shaders + keyboard/mouse
 controls), check scripts/sdl_viewer.py
 
 Author: SÃ©verin Lemaignan, 2012
@@ -70,7 +70,7 @@ class GLRenderer():
         self.prev_refreshed_time = 0
 
     def prepare_gl_buffers(self, mesh):
-        """ Creates 3 buffer objets for each mesh, 
+        """ Creates 3 buffer objets for each mesh,
         to store the vertices, the normals, and the faces
         indices.
         """
@@ -80,30 +80,30 @@ class GLRenderer():
         # Fill the buffer for vertex positions
         mesh.gl["vertices"] = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, mesh.gl["vertices"])
-        glBufferData(GL_ARRAY_BUFFER, 
-                    mesh.vertices,
-                    GL_STATIC_DRAW)
+        glBufferData(GL_ARRAY_BUFFER,
+                     mesh.vertices,
+                     GL_STATIC_DRAW)
 
         # Fill the buffer for normals
         mesh.gl["normals"] = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, mesh.gl["normals"])
-        glBufferData(GL_ARRAY_BUFFER, 
-                    mesh.normals,
-                    GL_STATIC_DRAW)
+        glBufferData(GL_ARRAY_BUFFER,
+                     mesh.normals,
+                     GL_STATIC_DRAW)
 
 
         # Fill the buffer for vertex positions
         mesh.gl["triangles"] = glGenBuffers(1)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.gl["triangles"])
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 
-                    mesh.faces,
-                    GL_STATIC_DRAW)
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     mesh.faces,
+                     GL_STATIC_DRAW)
 
         # Unbind buffers
-        glBindBuffer(GL_ARRAY_BUFFER,0)
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
 
-    def load_model(self, path, postprocess = None):
+    def load_model(self, path, postprocess=None):
         if postprocess:
             self.scene = pyassimp.load(path, postprocess)
         else:
@@ -111,7 +111,8 @@ class GLRenderer():
 
         scene = self.scene
         self.bb_min, self.bb_max = get_bounding_box(self.scene)
-        self.scene_center = [(a + b) / 2. for a, b in zip(self.bb_min, self.bb_max)]
+        self.scene_center = [(a + b) / 2. for a, b in zip(self.bb_min,
+                                                          self.bb_max)]
 
         for index, mesh in enumerate(scene.meshes):
             self.prepare_gl_buffers(mesh)
@@ -133,11 +134,11 @@ class GLRenderer():
         phi = 0
         if not self.using_fixed_cam:
             glLoadIdentity()
-            gluLookAt(0.,0.,3.,
-                      0.,0.,-5.,
-                      0.,1.,0.)
+            gluLookAt(0., 0., 3.,
+                      0., 0., -5.,
+                      0., 1., 0.)
 
-    def fit_scene(self, restore = False):
+    def fit_scene(self, restore=False):
         """ Compute a scale factor and a translation to fit and center
         the whole geometry on the screen.
         """
@@ -155,9 +156,9 @@ class GLRenderer():
 
         # center the model
         direction = -1 if not restore else 1
-        glTranslatef( direction * self.scene_center[0], 
-                      direction * self.scene_center[1], 
-                      direction * self.scene_center[2] )
+        glTranslatef(direction * self.scene_center[0],
+                     direction * self.scene_center[1],
+                     direction * self.scene_center[2])
         cameraVals[1][0] = self.scene_center[0]
         cameraVals[1][1] = self.scene_center[1]
         cameraVals[1][2] = self.scene_center[2]
@@ -169,7 +170,7 @@ class GLRenderer():
         the operation.
         """
 
-        if not hasattr(mat, "gl_mat"): # evaluate once the mat properties, and cache the values in a glDisplayList.
+        if not hasattr(mat, "gl_mat"):  # evaluate once the mat properties, and cache the values in a glDisplayList.
             diffuse = numpy.array(mat.properties.get("diffuse", [0.8, 0.8, 0.8, 1.0]))
             specular = numpy.array(mat.properties.get("specular", [0., 0., 0., 1.0]))
             ambient = numpy.array(mat.properties.get("ambient", [0.2, 0.2, 0.2, 1.0]))
@@ -180,7 +181,7 @@ class GLRenderer():
 
             setattr(mat, "gl_mat", glGenLists(1))
             glNewList(mat.gl_mat, GL_COMPILE)
-    
+
             glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse)
             glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular)
             glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ambient)
@@ -275,7 +276,7 @@ class GLRenderer():
         elif c == ord('t'):
             self.set_default_camera()
         elif c == ord('g'):
-           self.fit_scene()
+            self.fit_scene()
         elif c == ord('w'):
             glTranslatef(0, 1, 0)
         elif c == ord('s'):
@@ -292,7 +293,6 @@ class GLRenderer():
             self.angle -= 10
         elif c == curses.KEY_RIGHT:
             self.angle += 10
-
 
     def calcRadiusToObject(self):
         global radius
@@ -312,12 +312,11 @@ class GLRenderer():
         gluLookAt(eyeX, eyeY, eyeZ, cameraVals[1][0], cameraVals[1][1], cameraVals[1][2], 0, 1, 0)
         self.calcRadiusToObject()
 
-
     def moveCamera(self, ex=0, ey=0, ez=0, cx=0, cy=0, cz=0, upx=0, upy=0, upz=0):
         cameraVals[0][0] += ex
         cameraVals[0][1] += ey
         cameraVals[0][2] += ez
-        cameraVals[1][0] += cx        
+        cameraVals[1][0] += cx
         cameraVals[1][1] += cy
         cameraVals[1][2] += cz
         cameraVals[2][0] += upx
@@ -326,7 +325,6 @@ class GLRenderer():
         gluLookAt(cameraVals[0][0], cameraVals[0][1], cameraVals[0][2],
                   cameraVals[1][0], cameraVals[1][1], cameraVals[1][2],
                   cameraVals[2][0], cameraVals[2][1], cameraVals[2][2])
-        
 
     # This doesn't do anything because
     def onkeypress(self, key, x, y):
@@ -338,7 +336,7 @@ class GLRenderer():
         :param autofit: if true, scale the scene to fit the whole geometry
         in the viewport.
         """
-    
+
         # First initialize the openGL context
         glutInit(sys.argv)
         glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH)
@@ -346,7 +344,7 @@ class GLRenderer():
         glutCreateWindow(bytes(name, encoding="utf-8"))
 #        glutHideWindow()
         glutIconifyWindow()
-        self.load_model(filename, postprocess = postprocess)
+        self.load_model(filename, postprocess=postprocess)
 
 
 #        glClearColor(0.1,0.1,0.1,1.)
@@ -363,10 +361,9 @@ class GLRenderer():
 
         glutDisplayFunc(self.display)
 
-
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(35.0, width/float(height) , 0.10, 100.0)
+        gluPerspective(35.0, width/float(height), 0.10, 100.0)
         glMatrixMode(GL_MODELVIEW)
         self.set_default_camera()
 
@@ -426,8 +423,8 @@ def displayData(data):
         for r in range(curseScreenHeight):
             curseScreen.addstr(r, 0, charMap[-r])
         curseScreen.refresh()
-    
-    
+
+
 if __name__ == '__main__':
     if not len(sys.argv) > 1:
         print("Usage: " + __file__ + " <model>")
